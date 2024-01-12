@@ -1,0 +1,38 @@
+import boto3
+import pandas as pd
+client = boto3.client('glue')
+
+NextToken=''
+res = client.get_jobs()
+job_list=[]
+
+def get_job_details(job):
+    print(job["Name"])
+    job_run_res=client.get_job_runs(JobName=job["Name"],
+                MaxResults=1    )
+    if len(job_run_res['JobRuns'])>0:
+        LastRun=job_run_res['JobRuns'][0]['StartedOn']
+    else:
+        LastRun=''
+    
+    return {"name" : job["Name"],
+                  "job_type" : job["Command"]['Name'],
+                  'GlueVersion': job['GlueVersion'],
+                  'MaxCapacity' : job['MaxCapacity'],
+                  'AllocatedCapacity' :job['AllocatedCapacity'],
+                  'NumberOfWorkers' : job.get('NumberOfWorkers',''),
+                  'WorkerType' : job.get('WorkerType',''),
+                  'LastRun' : LastRun
+        }
+
+while 'NextToken' in res.keys():
+    NextToken=res['NextToken']
+    for job in res['Jobs']:
+        job_list.append(get_job_details(job))
+    res = client.get_jobs(NextToken=NextToken)
+
+for job in res['Jobs']:
+    job_list.append(get_job_details(job))
+
+pd.DataFrame(job_list).to_csv('glue_job_list.csv')
+
