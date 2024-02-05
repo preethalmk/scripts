@@ -1,0 +1,43 @@
+from azure.devops.connection import Connection
+from msrest.authentication import BasicAuthentication
+import pprint
+
+def sort_runs(p):
+    return datetime.strptime(p['created_date'],'%Y-%m-%dT%H:%M:%S.%fZ')
+
+# Fill in with your personal access token and org URL
+personal_access_token = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+organization_url = 'https://dev.azure.com/<organization>'
+run_colums=['id','name','created_date','state']
+
+pipelines_list=[]
+
+# Create a connection to the org
+credentials = BasicAuthentication('', personal_access_token)
+connection = Connection(base_url=organization_url, creds=credentials)
+
+# Get a client (the "core" client provides access to projects, teams, etc)
+core_client = connection.clients.get_core_client()
+get_projects_response = core_client.get_projects()
+for project in get_projects_response:
+    print(f'Processing : {project.name}')
+    for pipeline in pipeline_client.list_pipelines(project.name):
+        p={}
+        p['project']=project.name
+        p['pipeline_id']=pipeline.id
+        p['pipeline_name']=pipeline.name
+        p['folder']=pipeline.folder
+        pipeline_runs=[run.as_dict() for run in pipeline_client.list_runs(project.name,pipeline.id)]
+        pipeline_runs.sort(key=sort_runs,reverse=True)
+        if len(pipeline_runs)>0:
+            latest_run=pipeline_runs[0]
+            p['latest_run_id']=latest_run['id']
+            p['latest_run_name']=latest_run['name']
+            p['run_created_date']=latest_run['created_date']
+            p['result']=latest_run['result']
+        pipelines_list.append(p)
+
+import pandas as pd
+df=pd.DataFrame(pipelines_list)
+df.to_csv('piplines_list.csv',index=False)
+
