@@ -118,7 +118,7 @@ class PennyMac(PatchedBlueprint):
     def initialize_template(self):
         self.config = self.get_variables()
         
-    def Correspondence_sfn_defnition(self)
+    def Correspondence_sfn_defnition(self):
         return {
                   "Comment": "Sate Machine to parallelly process EmailNotification to PDF ",
                   "StartAt": "GeneratePDFs",
@@ -327,13 +327,16 @@ class PennyMac(PatchedBlueprint):
                             {
                                 "Action": [
                                     'states:DescribeActivity',
-                                    "states:DescribeExecution",                "states:ListExecutions",                "states:StartExecution",                "states:StartSyncExecution"
+                                    "states:DescribeExecution",
+                                    "states:ListExecutions",
+                                    "states:StartExecution",
+                                    "states:StartSyncExecution"
                                 ],
-                                "Resource": [Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:activity:")+f"{sfn_name}"),
-                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:execution:")+f"{sfn_name}:"),
-                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:mapRun:")+f"{sfn_name}/:"),                
-                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:stateMachine:")+f"{sfn_name}"), 
-                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:express:")+f"{sfn_name}::*")
+                                "Resource": [Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:activity:")+f"{sfn_name}",
+                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:execution:")+f"{sfn_name}:",
+                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:mapRun:")+f"{sfn_name}/:",                
+                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:stateMachine:")+f"{sfn_name}", 
+                                Sub("arn:aws:states:${AWS::Region}:${AWS::Region}:express:")+f"{sfn_name}::*"
                                 ],
                                 "Effect": "Allow"
                             }
@@ -581,15 +584,16 @@ class PennyMac(PatchedBlueprint):
         
         sfn_sub_dict={"functionName" : GetAtt(Correspondencefunction_logical_id , 'Arn')}
         
-        self.template.add_resource(StateMachine(
+        self.template.add_resource(
+            StateMachine(
         sfn_logical_id,
-        Definition=self.Correspondence_sfn_defnition()
+        Definition=self.Correspondence_sfn_defnition(),
         DefinitionSubstitutions = sfn_sub_dict,
         RoleArn = GetAtt(CorrespondenceSfnName + 'Role', 'Arn'),
         StateMachineName = sfn_name
-        )
-        
+        ))
 
+    
     def create_template(self):
         self.initialize_template()
         self.CustomerNotificationsConvertToPDF()
