@@ -8,9 +8,7 @@ from troposphere.logs import LogGroup
 from troposphere.stepfunctions import StateMachine
 
 from pnmac import (
-    DEFAULT_LAMBDA_EXEC_ROLE,
-    DEFAULT_SFN_EXEC_ROLE # confirm the exact variable
-    
+    DEFAULT_LAMBDA_EXEC_ROLE
 )
 
 import logging
@@ -368,10 +366,6 @@ class PennyMac(PatchedBlueprint):
             Correspondencefunction_logical_id + 'Role',
             Path='/',
             Policies=[
-                Policy(
-                    PolicyName="LambdaDefaultPolicy",
-                    PolicyDocument = DEFAULT_LAMBDA_EXEC_ROLE
-                ),
                 Policy(
                     PolicyName="LambdaSecretPolicy",
                     PolicyDocument = {
